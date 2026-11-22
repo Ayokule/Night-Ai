@@ -1,4 +1,4 @@
-# Nova AI Agent
+# Night AI Agent
 
 A production-ready web-based AI agent with agentic capabilities, featuring a premium dark theme UI built with React/Vite and a robust Express/SQLite backend.
 

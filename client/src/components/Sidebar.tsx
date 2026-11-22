@@ -101,7 +101,7 @@ export function Sidebar({
             <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-blue-600">
               <MessageSquare className="h-5 w-5 text-white" />
             </div>
-            <span className="font-display font-semibold text-lg">Nova</span>
+            <span className="font-display font-semibold text-lg">Night AI</span>
           </div>
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors"

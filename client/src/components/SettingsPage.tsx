@@ -159,7 +159,7 @@ export function SettingsPage({
           <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-blue-600">
             <Zap className="h-5 w-5 text-white" />
           </div>
-          <span className="font-display font-semibold text-lg">Nova</span>
+          <span className="font-display font-semibold text-lg">Night AI</span>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

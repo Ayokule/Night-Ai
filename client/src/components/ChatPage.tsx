@@ -114,7 +114,7 @@ export function ChatPage({
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="font-display font-semibold text-lg">Nova Assistant</h1>
+              <h1 className="font-display font-semibold text-lg">Night AI</h1>
               <p className="text-xs text-muted-foreground">GPT-4 Turbo • 128k context</p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function ChatPage({
             ))}
           </div>
           <p className="mt-8 text-xs text-muted-foreground/60">
-            Nova can make mistakes. Verify important information.
+            Night AI can make mistakes. Verify important information.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export function ChatPage({
                 onKeyDown={handleKeyDown}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
-                placeholder="Message Nova… (Shift+Enter for new line)"
+                placeholder="Message Night AI… (Shift+Enter for new line)"
                 className="w-full min-h-[48px] max-h-[180px] px-4 py-3 pr-14 bg-background border border-border rounded-xl text-base resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 rows={1}
                 style={{ height: textareaHeight }}
@@ -219,7 +219,7 @@ export function ChatPage({
             <Bot className="h-5 w-5 text-violet-500" />
           </div>
           <div>
-            <h1 className="font-display font-semibold text-lg">Nova Assistant</h1>
+            <h1 className="font-display font-semibold text-lg">Night AI</h1>
             <p className="text-xs text-muted-foreground">GPT-4 Turbo • 128k context</p>
           </div>
         </div>
@@ -286,7 +286,7 @@ export function ChatPage({
               onKeyDown={handleKeyDown}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
-              placeholder="Message Nova… (Shift+Enter for new line)"
+              placeholder="Message Night AI… (Shift+Enter for new line)"
               className="w-full min-h-[48px] max-h-[180px] px-4 py-3 pr-14 bg-background border border-border rounded-xl text-base resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               rows={1}
               style={{ height: textareaHeight }}
