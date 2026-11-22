@@ -16,19 +16,18 @@ app.use(express.static(path.join(__dirname, '../client/dist')));
 // System prompt for the AI Agent
 const SYSTEM_PROMPT = `You are an AI Agent. You have these tools: save_note(text) and get_time(). If you want to use a tool, respond ONLY with a JSON object: {"tool": "tool_name", "args": "value"}. Otherwise, chat normally.`;
 
-// Call FreeLLMAPI
+// Call FreeLLMAPI (OpenAI-compatible format)
 async function callLLM(messages, apiKey) {
-  const response = await fetch('http://freellmapi-claude.up.railway.app/v1/chat/completions', {
+  const response = await fetch(process.env.FREELM_API_URL || 'https://freellmapi-claude.up.railway.app/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      messages,
-      temperature: 0.7,
-      max_tokens: 2000
+      model: 'auto',
+      max_tokens: 2000,
+      messages
     })
   });
 
@@ -38,7 +37,9 @@ async function callLLM(messages, apiKey) {
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  // Extract content from OpenAI-compatible response format
+  const choice = data.choices && data.choices[0];
+  return choice?.message?.content || '';
 }
 
 // Check if response is a tool call
@@ -126,7 +127,7 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const key = apiKey || process.env.FREELLM_API_KEY || 'freellmapi-80e928f21a9c07428815c1fdcdadb645c15173e612df942c';
+    const key = apiKey || process.env.FREELM_API_KEY || 'freellmapi-80e928f21a9c07428815c1fdcdadb645c15173e612df942c';
 
     let convId = conversationId;
     if (!convId) {
@@ -221,7 +222,7 @@ app.delete('/api/account/delete', (req, res) => {
 });
 
 // Serve frontend for all other routes
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
