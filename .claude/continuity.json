@@ -1,0 +1,45 @@
+{
+  "lastSession": "2026-11-23T15:01:00+01:00",
+  "branch": "main",
+  "commit": "c4f7275",
+  "phase": "Phase 2 — Debug & Stability",
+  "nextAction": "Test DebugPanel end-to-end in browser, then fix tool iteration loop bug",
+  "project": {
+    "name": "Night AI",
+    "stack": "Express 5 + React 19 + TypeScript + Vite 8 + better-sqlite3",
+    "port": 3000,
+    "provider": "FreeLLMAPI (OpenAI-compatible)",
+    "defaultApiKey": "freellmapi-80e928f21a9c07428815c1fdcdadb645c15173e612df942c"
+  },
+  "workingState": {
+    "serverRunning": true,
+    "apiEndpointsWorking": true,
+    "frontendServing": true,
+    "debugPanelInBundle": true,
+    "conversationsInDB": 15,
+    "knownBug": "tool_call_loop_max_iterations"
+  },
+  "gitStatus": {
+    "modified": ["client/index.html", "client/src/App.tsx", "client/src/main.tsx", "server/notes.json"],
+    "deleted": [".railway/railway.ts"],
+    "untracked": ["client/src/components/DebugPanel.tsx", "client/src/lib/debugger.ts", "noswriter/", "package-lock.json"]
+  },
+  "keyFiles": {
+    "server": "/home/godwin/web-ai-agent/server/index.js",
+    "frontend_app": "/home/godwin/web-ai-agent/client/src/App.tsx",
+    "debugger_lib": "/home/godwin/web-ai-agent/client/src/lib/debugger.ts",
+    "debug_panel": "/home/godwin/web-ai-agent/client/src/components/DebugPanel.tsx",
+    "database": "/home/godwin/web-ai-agent/server/database.js",
+    "tools": "/home/godwin/web-ai-agent/server/tools.js"
+  },
+  "criticalConstraints": [
+    "Never name variable 'debugger' — reserved JS keyword, use 'frontendDebugger'",
+    "TypeScript verbatimModuleSyntax requires 'type X' for type-only imports",
+    "Frontend build MUST be re-run after any source change (tsc -b && vite build)"
+  ],
+  "testCommands": {
+    "health_check": "curl -s http://localhost:3000/api/conversations",
+    "send_message": "curl -X POST http://localhost:3000/api/chat -H 'Content-Type: application/json' -d '{\"message\":\"hello\"}'",
+    "list_tools": "curl -s http://localhost:3000/api/tools"
+  }
+}

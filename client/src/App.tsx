@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from "react"
 import { Sidebar } from "@/components/Sidebar"
 import { ChatPage } from "@/components/ChatPage"
 import { SettingsPage } from "@/components/SettingsPage"
+import { DebugPanel } from "@/components/DebugPanel"
 import { MessageSquare, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { logApi, logChat, logState, logError } from "@/lib/debugger"
 
 interface Conversation {
   id: string
@@ -57,42 +59,56 @@ export default function App() {
   }, [])
 
   const fetchConversations = async () => {
+    logApi('debug', 'Fetching conversations')
     try {
       const response = await fetch("/api/conversations")
       if (response.ok) {
         const data = await response.json()
-        setConversations(data.conversations || [])
+        const convs = data.conversations || []
+        setConversations(convs)
+        logApi('info', `Loaded ${convs.length} conversations`, { conversations: convs })
+      } else {
+        logApi('error', `Failed to fetch conversations: ${response.status}`, { status: response.status })
       }
     } catch (error) {
-      console.error("Failed to fetch conversations:", error)
+      logError('API', 'Failed to fetch conversations', error)
     }
   }
 
   const loadConversation = useCallback(async (id: string) => {
+    logChat('info', 'Loading conversation', { conversationId: id })
     setIsLoading(true)
     try {
       const response = await fetch(`/api/conversations/${id}`)
       if (response.ok) {
         const data = await response.json()
-        setMessages(data.messages || [])
+        const msgs = data.messages || []
+        setMessages(msgs)
         setCurrentConversationId(id)
         setSidebarOpen(false)
+        logChat('info', `Loaded conversation with ${msgs.length} messages`, { messageCount: msgs.length })
+      } else {
+        logChat('error', `Failed to load conversation: ${response.status}`, { status: response.status })
       }
     } catch (error) {
-      console.error("Failed to load conversation:", error)
+      logError('CHAT', 'Failed to load conversation', error)
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   const handleNewChat = useCallback(() => {
+    logChat('info', 'Starting new chat')
     setCurrentConversationId(null)
     setMessages([])
     setSidebarOpen(false)
+    logState('debug', 'State reset for new chat')
   }, [])
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return
+
+    logChat('info', 'Sending message', { content, conversationId: currentConversationId, hasApiKey: !!apiKey })
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -108,6 +124,7 @@ export default function App() {
     let conversationId = currentConversationId
     if (!conversationId) {
       try {
+        logApi('debug', 'Creating new conversation')
         const response = await fetch("/api/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -117,116 +134,51 @@ export default function App() {
           const data = await response.json()
           conversationId = data.conversation.id
           setCurrentConversationId(conversationId)
+          logApi('info', 'Created new conversation', { conversationId })
           await fetchConversations()
+        } else {
+          logApi('error', `Failed to create conversation: ${response.status}`)
         }
       } catch (error) {
-        console.error("Failed to create conversation:", error)
+        logError('API', 'Failed to create conversation', error)
       }
     }
 
     // Send to chat API
     try {
+      logApi('debug', 'Calling chat API', { message: content, conversationId, apiKey: apiKey ? '***' : 'none' })
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          message: content,
           conversationId,
-          messages: [...messages, userMessage].map((m) => ({
-            role: m.role,
-            content: m.content,
-            tool_name: m.toolName,
-            tool_args: m.toolArgs,
-            tool_result: m.toolResult,
-          })),
           apiKey,
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to send message")
+        throw new Error(`Failed to send message: ${response.status}`)
       }
 
       const data = await response.json()
+      logApi('info', 'Received chat response', { response: data.response?.slice(0, 100), conversationId: data.conversationId })
 
-      // Add assistant message
-      if (data.message) {
-        setMessages((prev) => [...prev, data.message])
-      }
-
-      // If there are tool calls, execute them in a loop
-      if (data.toolCalls && data.toolCalls.length > 0) {
-        for (const toolCall of data.toolCalls) {
-          // Add tool call message
-          const toolCallMsg: Message = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: `Calling ${toolCall.name}...`,
-            createdAt: new Date().toISOString(),
-            toolName: toolCall.name,
-            toolArgs: JSON.stringify(toolCall.arguments),
-          }
-          setMessages((prev) => [...prev, toolCallMsg])
-
-          // Execute tool
-          const toolResponse = await fetch("/api/tools/execute", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: toolCall.name,
-              arguments: toolCall.arguments,
-            }),
-          })
-
-          if (toolResponse.ok) {
-            const toolResult = await toolResponse.json()
-
-            // Add tool result message
-            const toolResultMsg: Message = {
-              id: crypto.randomUUID(),
-              role: "tool",
-              content: "",
-              createdAt: new Date().toISOString(),
-              toolName: toolCall.name,
-              toolResult: JSON.stringify(toolResult.result),
-            }
-            setMessages((prev) => [...prev, toolResultMsg])
-
-            // Continue the conversation with tool result
-            const continueResponse = await fetch("/api/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                conversationId,
-                messages: [
-                  ...messages,
-                  userMessage,
-                  ...(data.message ? [data.message] : []),
-                  toolCallMsg,
-                  toolResultMsg,
-                ].map((m) => ({
-                  role: m.role,
-                  content: m.content,
-                  tool_name: m.toolName,
-                  tool_args: m.toolArgs,
-                  tool_result: m.toolResult,
-                })),
-                apiKey,
-              }),
-            })
-
-            if (continueResponse.ok) {
-              const continueData = await continueResponse.json()
-              if (continueData.message) {
-                setMessages((prev) => [...prev, continueData.message])
-              }
-            }
-          }
+      // Add assistant message (backend does all agentic loop internally)
+      if (data.response) {
+        const assistantMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: data.response,
+          createdAt: new Date().toISOString(),
         }
+        setMessages((prev) => [...prev, assistantMessage])
+        logChat('info', 'Added assistant message to UI', { messageLength: data.response.length })
       }
 
       await fetchConversations()
     } catch (error) {
-      console.error("Failed to send message:", error)
+      logError('CHAT', 'Failed to send message', error)
       // Add error message
       const errorMessage: Message = {
         id: crypto.randomUUID(),
@@ -237,6 +189,7 @@ export default function App() {
       setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
+      logState('debug', 'Loading state reset')
     }
   }
 
@@ -315,6 +268,9 @@ export default function App() {
           onNewChat={handleNewChat}
         />
       </main>
+
+      {/* Debug Panel */}
+      <DebugPanel />
     </div>
   )
 }

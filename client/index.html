@@ -4,10 +4,52 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
+    <title>Night AI</title>
+    <style>
+      #error-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+        padding: 40px;
+        overflow: auto;
+        font-family: monospace;
+      }
+      #error-overlay.show { display: block; }
+      #error-overlay h2 { color: #ff6b6b; margin-bottom: 20px; }
+      #error-overlay pre { color: #eee; white-space: pre-wrap; word-break: break-all; }
+      #error-overlay .retry-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #4ecdc4;
+        border: none;
+        color: #000;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="error-overlay">
+      <h2>⚠️ Application Error</h2>
+      <pre id="error-details"></pre>
+      <button class="retry-btn" onclick="location.reload()">Retry</button>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('error', (e) => {
+        document.getElementById('error-overlay').classList.add('show');
+        document.getElementById('error-details').textContent = 
+          'Error: ' + (e.error?.message || e.message) + '\n\nStack:\n' + (e.error?.stack || '');
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        document.getElementById('error-overlay').classList.add('show');
+        document.getElementById('error-details').textContent = 
+          'Unhandled Promise Rejection: ' + e.reason + '\n\nFull: ' + JSON.stringify(e.reason, null, 2);
+      });
+    </script>
   </body>
 </html>
